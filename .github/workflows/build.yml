@@ -9,6 +9,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      missing_deps: ${{ steps.check_deps.outputs.missing_deps }}
+      has_missing: ${{ steps.check_deps.outputs.has_missing }}
+      pr_number: ${{ github.event.pull_request.number }}
+      branch_name: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v3
       
@@ -29,11 +34,10 @@ jobs:
       - name: Check for missing dependencies
         id: check_deps
         run: |
-          python -c "
+          python << 'PYTHON_EOF'
           import ast
           import sys
           
-          # Parse the Python file
           with open('weather_assistant.py', 'r') as f:
               tree = ast.parse(f.read())
           
@@ -46,19 +50,21 @@ jobs:
                   if node.module:
                       imports.add(node.module.split('.')[0])
           
-          # Check which imports are available
           missing = []
           for imp in imports:
-              if imp not in ['asyncio', 'sys', 'random']:  # stdlib
+              if imp not in ['asyncio', 'sys', 'random']:
                   try:
                       __import__(imp)
                   except ImportError:
                       missing.append(imp)
           
           if missing:
-              print(f'MISSING_DEPS={\" \".join(missing)}')
+              print(f"::set-output name=missing_deps::{','.join(missing)}")
+              print(f"::set-output name=has_missing::true")
               sys.exit(1)
-          "
+          else:
+              print(f"::set-output name=has_missing::false")
+          PYTHON_EOF
         env:
           PYTHONPATH: ${{ github.workspace }}
       
@@ -81,3 +87,14 @@ jobs:
       - uses: actions/checkout@v3
       - name: Save build logs
         run: echo "Build completed at $(date)" > build.log
+
+  trigger-healing:
+    needs: build
+    if: needs.build.outputs.has_missing == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger self-healing workflow
+        run: |
+          echo "Missing dependencies detected: ${{ needs.build.outputs.missing_deps }}"
+          echo "PR Number: ${{ needs.build.outputs.pr_number }}"
+          echo "Self-healing workflow will be triggered..."
