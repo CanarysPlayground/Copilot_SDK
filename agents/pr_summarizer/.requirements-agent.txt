@@ -1,0 +1,13 @@
+# GitHub Copilot SDK
+copilot-client>=0.1.0
+
+# GitHub Integration
+PyGithub>=2.1.1
+requests>=2.31.0
+
+# Environment & Config
+python-dotenv>=1.0.0
+pydantic-settings>=2.0.0
+
+# Utilities
+rich>=13.0.0

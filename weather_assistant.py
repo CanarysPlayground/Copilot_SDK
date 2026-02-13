@@ -5,7 +5,7 @@ from copilot import CopilotClient
 from copilot.tools import define_tool
 from copilot.generated.session_events import SessionEventType
 from pydantic import BaseModel, Field
-
+import requests
 class GetWeatherParams(BaseModel):
     city: str = Field(description="The name of the city to get weather for")
 

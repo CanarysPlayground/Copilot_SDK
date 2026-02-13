@@ -1,0 +1,9 @@
+copilot-client==1.0.0
+pydantic==2.12.5
+pydantic_core==2.41.5
+asyncio
+requests>=2.28.0
+copilot-client==1.0.0
+pydantic==2.12.5
+pydantic_core==2.41.5
+requests==2.32.5
